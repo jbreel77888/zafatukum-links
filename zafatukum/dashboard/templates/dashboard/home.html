@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundFlow - لوحة التحكم</title>
+    <link rel="stylesheet" href="{% static 'dashboard/css/dashboard.css' %}">
+    <style>
+        /* حافظت على نفس الخطوط والتصميم كما في الكود السابق */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f8fafc; color:#1a202c; overflow-x:hidden; }
+        /* Sidebar */
+        .sidebar { position:fixed; right:0; top:0; width:280px; height:100vh; background:linear-gradient(180deg, #667eea 0%, #764ba2 100%); padding:0; z-index:1000; box-shadow:-5px 0 20px rgba(0,0,0,0.1); transition:transform 0.3s ease; }
+        .sidebar-header { padding:30px 25px; border-bottom:1px solid rgba(255,255,255,0.1); text-align:center; }
+        .logo h1 { color:white; font-size:28px; font-weight:700; margin-bottom:8px; }
+        .logo p { color:rgba(255,255,255,0.8); font-size:14px; font-weight:500; }
+        .nav-menu { padding:20px 0; }
+        .nav-item { display:block; padding:15px 25px; color:rgba(255,255,255,0.9); text-decoration:none; font-weight:500; font-size:15px; transition:all 0.3s ease; border:none; background:none; width:100%; text-align:right; cursor:pointer; }
+        .nav-item:hover, .nav-item.active { background:rgba(255,255,255,0.15); color:white; transform:translateX(-5px); border-right:4px solid white; }
+        .nav-item i { margin-left:12px; font-size:18px; width:20px; text-align:center; }
+        .user-profile { position:absolute; bottom:0; left:0; right:0; padding:25px; border-top:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.1); }
+        .user-info { display:flex; align-items:center; color:white; }
+        .user-avatar { width:45px; height:45px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:18px; margin-left:12px; }
+        .user-details h4 { font-size:16px; margin-bottom:4px; }
+        .user-details p { font-size:12px; opacity:0.8; }
+
+        /* Main Content */
+        .main-content { margin-right:280px; min-height:100vh; background:#f8fafc; }
+        .header { background:white; padding:20px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.05); border-bottom:1px solid #e2e8f0; }
+        .header-content { display:flex; justify-content:space-between; align-items:center; }
+        .page-title { font-size:28px; font-weight:700; color:#1a202c; }
+        .header-actions { display:flex; gap:15px; align-items:center; }
+        .notification-btn { position:relative; background:none; border:none; font-size:22px; color:#64748b; cursor:pointer; padding:8px; border-radius:50%; transition:all 0.3s ease; }
+        .notification-btn:hover { background:#f1f5f9; color:#667eea; }
+        .notification-badge { position:absolute; top:2px; right:2px; background:#ef4444; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:flex; align-items:center; justify-content:center; }
+        .content { padding:40px; }
+
+        /* Stats Cards */
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:25px; margin-bottom:40px; }
+        .stat-card { background:white; padding:30px; border-radius:20px; box-shadow:0 4px 20px rgba(0,0,0,0.08); transition:all 0.3s ease; border:1px solid #e2e8f0; position:relative; overflow:hidden; }
+        .stat-card:hover { transform:translateY(-5px); box-shadow:0 8px 35px rgba(0,0,0,0.15); }
+        .stat-card::before { content:''; position:absolute; top:0; right:0; left:0; height:4px; background:linear-gradient(90deg, #667eea, #764ba2); }
+        .stat-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
+        .stat-title { font-size:15px; color:#64748b; font-weight:600; }
+        .stat-icon { width:45px; height:45px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; color:white; }
+        .stat-icon.earnings { background:linear-gradient(135deg, #10b981, #059669); }
+        .stat-icon.streams { background:linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .stat-icon.releases { background:linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .stat-icon.revenue { background:linear-gradient(135deg, #f59e0b, #d97706); }
+        .stat-value { font-size:36px; font-weight:700; color:#1a202c; margin-bottom:8px; }
+        .stat-change { font-size:14px; font-weight:600; display:flex; align-items:center; }
+        .stat-change.positive { color:#10b981; }
+        .stat-change.negative { color:#ef4444; }
+        .stat-change i { margin-left:4px; font-size:12px; }
+
+        /* Page Content Sections */
+        .page-content { display:none; }
+        .page-content.active { display:block; animation:fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+        /* Releases Table */
+        .releases-table { background:white; border-radius:20px; box-shadow:0 4px 20px rgba(0,0,0,0.08); border:1px solid #e2e8f0; overflow:hidden; }
+        .table-header { padding:30px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; }
+        .table-title { font-size:20px; font-weight:700; color:#1a202c; }
+        .add-release-btn { background:linear-gradient(135deg, #667eea, #764ba2); color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:600; cursor:pointer; transition:all 0.3s ease; text-decoration:none; }
+        .add-release-btn:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(102,126,234,0.3); }
+        .table-container { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; }
+        th, td { text-align:right; padding:20px; border-bottom:1px solid #f1f5f9; }
+        th { background:#f8fafc; font-weight:700; color:#374151; font-size:14px; }
+        .status-badge { padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+        .status-pending { background:#fef3c7; color:#92400e; }
+        .status-review { background:#dbeafe; color:#1e40af; }
+        .status-sent { background:#d1fae5; color:#065f46; }
+        .status-rejected { background:#fee2e2; color:#991b1b; }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <h1>SoundFlow</h1>
+                <p>منصة التوزيع الموسيقي</p>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <button class="nav-item active" onclick="showPage('dashboard')"><i>🏠</i> الرئيسية</button>
+            <button class="nav-item" onclick="showPage('releases')"><i>🎵</i> الإصدارات</button>
+        </nav>
+        <div class="user-profile">
+            <div class="user-info">
+                <div class="user-avatar">👤</div>
+                <div class="user-details">
+                    <h4>{{ request.user.username }}</h4>
+                    <p>فنان مستقل</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="page-title" id="pageTitle">لوحة التحكم الرئيسية</h1>
+            </div>
+        </header>
+
+        <main class="content">
+            <!-- Dashboard Stats -->
+            <div id="dashboardPage" class="page-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">إجمالي الأرباح</div>
+                            <div class="stat-icon earnings">💰</div>
+                        </div>
+                        <div class="stat-value">${{ stats.total_earnings }}</div>
+                        <div class="stat-change {% if stats.monthly_change >= 0 %}positive{% else %}negative{% endif %}">
+                            <i>{% if stats.monthly_change >= 0 %}↗️{% else %}↘️{% endif %}</i> {{ stats.monthly_change }}% من الشهر الماضي
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">إجمالي الاستماعات</div>
+                            <div class="stat-icon streams">🎧</div>
+                        </div>
+                        <div class="stat-value">{{ stats.total_streams|intcomma }}</div>
+                        <div class="stat-change positive">
+                            <i>↗️</i> زيادة عن الشهر الماضي
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Releases Table -->
+            <div id="releasesPage" class="page-content">
+                <div class="releases-table">
+                    <div class="table-header">
+                        <h3 class="table-title">إصداراتي</h3>
+                        <a href="#" class="add-release-btn">+ إضافة إصدار جديد</a>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>اسم الإصدار</th>
+                                    <th>الفنان</th>
+                                    <th>تاريخ الرفع</th>
+                                    <th>الحالة</th>
+                                    <th>المنصات</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for release in releases %}
+                                <tr>
+                                    <td>{{ release.title }}</td>
+                                    <td>{{ release.artist.name }}</td>
+                                    <td>{{ release.upload_date }}</td>
+                                    <td>
+                                        <span class="status-badge
+                                            {% if release.status == 'pending' %}status-pending{% endif %}
+                                            {% if release.status == 'review' %}status-review{% endif %}
+                                            {% if release.status == 'sent' %}status-sent{% endif %}
+                                            {% if release.status == 'rejected' %}status-rejected{% endif %}
+                                        ">
+                                            {{ release.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ release.platforms }}</td>
+                                    <td>
+                                        <button style="background:#3b82f6;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">تفاصيل</button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="6" style="text-align:center; padding:20px;">لا يوجد إصدارات بعد</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function showPage(page) {
+            document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+            document.getElementById(page + 'Page').classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            document.getElementById('pageTitle').innerText = page === 'dashboard' ? 'لوحة التحكم الرئيسية' : 'إصداراتي';
+        }
+    </script>
+</body>
+</html>

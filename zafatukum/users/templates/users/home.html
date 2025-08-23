@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>الصفحة الرئيسية</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family:'Cairo', system-ui; margin:0; padding:0; background:#f7f7fb; }
+    .wrap { max-width:900px; margin:60px auto; background:#fff; border-radius:16px; padding:28px; box-shadow:0 10px 30px rgba(0,0,0,.06);}
+    .title { font-weight:800; font-size:22px; margin-bottom:8px; background:linear-gradient(135deg,#667eea,#764ba2); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .subtitle { color:#666; margin-bottom:20px; }
+    a.btn { display:inline-block; padding:10px 14px; border-radius:10px; text-decoration:none; background:#efefef; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">مرحبًا {{ request.user.username }} 👋</div>
+    <div class="subtitle">تم تسجيل الدخول بنجاح. لاحقًا سيتم تحويلك للداشبورد الفعلي.</div>
+    {% if profile and profile.display_name %}
+      <p>الاسم المعروض: <strong>{{ profile.display_name }}</strong></p>
+    {% endif %}
+    {% if profile and profile.phone %}
+      <p>رقم الهاتف: <strong>{{ profile.phone }}</strong></p>
+    {% endif %}
+    <p><a href="{% url 'logout' %}" class="btn">تسجيل الخروج</a></p>
+  </div>
+</body>
+</html>
